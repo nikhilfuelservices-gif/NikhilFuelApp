@@ -6,6 +6,7 @@ import android.content.Intent;
 import android.content.res.Configuration;
 import android.net.Uri;
 import android.os.Bundle;
+import android.webkit.JavascriptInterface;
 import android.webkit.WebResourceRequest;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
@@ -14,6 +15,13 @@ import android.widget.Toast;
 
 public class MainActivity extends Activity {
     private WebView webView;
+
+    public class AndroidBridge {
+        @JavascriptInterface
+        public void showToast(String message) {
+            Toast.makeText(MainActivity.this, message == null ? "" : message, Toast.LENGTH_SHORT).show();
+        }
+    }
 
     @Override public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -28,6 +36,7 @@ public class MainActivity extends Activity {
         s.setAllowContentAccess(true);
         s.setBuiltInZoomControls(false);
         s.setDisplayZoomControls(false);
+        webView.addJavascriptInterface(new AndroidBridge(), "AndroidBridge");
 
         webView.setWebViewClient(new WebViewClient() {
             @Override
@@ -36,7 +45,6 @@ public class MainActivity extends Activity {
                 boolean dark = (getResources().getConfiguration().uiMode & Configuration.UI_MODE_NIGHT_MASK) == Configuration.UI_MODE_NIGHT_YES;
                 String darkJs = dark ? "true" : "false";
 
-                // Remove the manual theme switch and make the web app follow the Android device theme.
                 view.evaluateJavascript(
                     "(function(){" +
                     "var t=document.getElementById('themeBtn');if(t)t.remove();" +
@@ -70,8 +78,6 @@ public class MainActivity extends Activity {
         String scheme = uri.getScheme();
         String host = uri.getHost();
 
-        // Keep the app fully offline/local, but hand WhatsApp links to Android
-        // instead of trying to load wa.me inside the WebView.
         if ("https".equalsIgnoreCase(scheme) && "wa.me".equalsIgnoreCase(host)) {
             String text = uri.getQueryParameter("text");
             if (text == null) text = "";
@@ -79,7 +85,6 @@ public class MainActivity extends Activity {
             return true;
         }
 
-        // Do not allow accidental external web pages to replace the app.
         if ("file".equalsIgnoreCase(scheme) || "about".equalsIgnoreCase(scheme)) {
             return false;
         }
@@ -91,7 +96,6 @@ public class MainActivity extends Activity {
         intent.setType("text/plain");
         intent.putExtra(Intent.EXTRA_TEXT, text);
 
-        // Prefer the normal WhatsApp app, then WhatsApp Business.
         if (isPackageInstalled("com.whatsapp")) {
             intent.setPackage("com.whatsapp");
             try {
@@ -108,7 +112,6 @@ public class MainActivity extends Activity {
             } catch (ActivityNotFoundException ignored) { }
         }
 
-        // If neither WhatsApp app is installed, show Android's share chooser.
         intent.setPackage(null);
         try {
             startActivity(Intent.createChooser(intent, "Share report"));
