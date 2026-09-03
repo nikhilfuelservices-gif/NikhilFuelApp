@@ -50,6 +50,14 @@ public class MainActivity extends Activity {
                     "var t=document.getElementById('themeBtn');if(t)t.remove();" +
                     "try{localStorage.removeItem('npTheme')}catch(e){}" +
                     "document.body.classList.toggle('light',!" + darkJs + ");" +
+                    "window.showToast=function(message,type,duration){" +
+                    "message=String(message==null?'':message);" +
+                    "try{if(window.AndroidBridge&&AndroidBridge.showToast){AndroidBridge.showToast(message);return}}catch(e){}" +
+                    "var el=document.getElementById('npToast');if(!el)return;" +
+                    "if(window.npToastTimer)clearTimeout(window.npToastTimer);" +
+                    "el.textContent=message;el.className='show '+(type||'success');" +
+                    "window.npToastTimer=setTimeout(function(){el.className=''},duration||2200);" +
+                    "};" +
                     "var s=document.getElementById('android-header-alignment-fix');" +
                     "if(!s){s=document.createElement('style');s.id='android-header-alignment-fix';" +
                     "s.textContent='.header-actions{display:flex!important;align-items:center!important;justify-content:flex-end!important;gap:0!important}.header-actions .refresh-icon-btn{margin:0!important;flex:0 0 40px!important;width:40px!important;min-width:40px!important;height:40px!important;min-height:40px!important;padding:0!important;box-sizing:border-box!important;align-self:center!important;display:inline-flex!important;align-items:center!important;justify-content:center!important;line-height:1!important}@media(max-width:520px){.header-actions .refresh-icon-btn{flex-basis:40px!important;width:40px!important;min-width:40px!important;height:40px!important;min-height:40px!important}}';document.head.appendChild(s)}" +
