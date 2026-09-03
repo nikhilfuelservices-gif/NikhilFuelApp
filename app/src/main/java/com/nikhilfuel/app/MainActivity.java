@@ -82,8 +82,6 @@ public class MainActivity extends Activity {
         webView.setHorizontalScrollBarEnabled(false);
         webView.loadUrl("file:///android_asset/index.html");
 
-        // Android 13+ uses the OnBackInvokedDispatcher for the system Back gesture/button.
-        // Register it explicitly so the HTML popup is closed before page/activity navigation.
         if (Build.VERSION.SDK_INT >= 33) {
             getOnBackInvokedDispatcher().registerOnBackInvokedCallback(
                 android.window.OnBackInvokedDispatcher.PRIORITY_DEFAULT,
@@ -96,8 +94,8 @@ public class MainActivity extends Activity {
         }
     }
 
-    private void handleExternalUrl(Uri uri) {
-        if (uri == null) return;
+    private boolean handleExternalUrl(Uri uri) {
+        if (uri == null) return false;
         String scheme = uri.getScheme();
         String host = uri.getHost();
 
@@ -105,7 +103,13 @@ public class MainActivity extends Activity {
             String text = uri.getQueryParameter("text");
             if (text == null) text = "";
             openWhatsApp(text);
+            return true;
         }
+
+        if ("file".equalsIgnoreCase(scheme) || "about".equalsIgnoreCase(scheme)) {
+            return false;
+        }
+        return true;
     }
 
     private void openWhatsApp(String text) {
@@ -152,13 +156,10 @@ public class MainActivity extends Activity {
             return;
         }
 
-        // Consume the Android Back event first. JavaScript then decides whether
-        // an HTML popup is open. This prevents Android from navigating/exiting
-        // before the asynchronous JavaScript check completes.
         webView.evaluateJavascript(
             "(function(){" +
             "var p=document.getElementById('historyPopup');" +
-            "if(p&&p.style.display!=='none'){" +
+            "if(p&&getComputedStyle(p).display!=='none'){" +
             "if(typeof window.closeHistoryPopup==='function')window.closeHistoryPopup();else p.style.display='none';return 'modal';}" +
             "var m=document.getElementById('segmentHistoryOverlay');" +
             "if(m&&m.classList.contains('show')){if(typeof window.closeSegmentHistory==='function')window.closeSegmentHistory();else m.classList.remove('show');return 'modal';}" +
@@ -180,7 +181,6 @@ public class MainActivity extends Activity {
         );
     }
 
-    // Used on Android 12 and below.
     @Override public void onBackPressed() {
         if (Build.VERSION.SDK_INT < 33) {
             handleBackPress();
