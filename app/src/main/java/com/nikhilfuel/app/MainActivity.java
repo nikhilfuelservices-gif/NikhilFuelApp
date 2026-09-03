@@ -3,6 +3,7 @@ package com.nikhilfuel.app;
 import android.app.Activity;
 import android.content.ActivityNotFoundException;
 import android.content.Intent;
+import android.content.res.Configuration;
 import android.net.Uri;
 import android.os.Bundle;
 import android.webkit.WebResourceRequest;
@@ -32,13 +33,19 @@ public class MainActivity extends Activity {
             @Override
             public void onPageFinished(WebView view, String url) {
                 super.onPageFinished(view, url);
-                // Keep the top-right theme and refresh controls equal in height
-                // and vertically centered on the same baseline.
+                boolean dark = (getResources().getConfiguration().uiMode & Configuration.UI_MODE_NIGHT_MASK) == Configuration.UI_MODE_NIGHT_YES;
+                String darkJs = dark ? "true" : "false";
+
+                // Remove the manual theme switch and make the web app follow the Android device theme.
                 view.evaluateJavascript(
-                    "(function(){var s=document.getElementById('android-header-alignment-fix');" +
-                    "if(s)return;s=document.createElement('style');s.id='android-header-alignment-fix';" +
-                    "s.textContent='.header-actions{display:flex!important;align-items:center!important;justify-content:flex-end!important;gap:8px!important}.header-actions .theme-btn{margin:0!important;flex:0 0 50px!important;width:50px!important;height:40px!important;min-height:40px!important;padding:0!important;box-sizing:border-box!important;align-self:center!important}.header-actions .refresh-icon-btn{margin:0!important;flex:0 0 40px!important;width:40px!important;min-width:40px!important;height:40px!important;min-height:40px!important;padding:0!important;box-sizing:border-box!important;align-self:center!important;display:inline-flex!important;align-items:center!important;justify-content:center!important;line-height:1!important}@media(max-width:520px){.header-actions{gap:7px!important}.header-actions .theme-btn{flex-basis:48px!important;width:48px!important;height:40px!important;min-height:40px!important}.header-actions .refresh-icon-btn{flex-basis:40px!important;width:40px!important;min-width:40px!important;height:40px!important;min-height:40px!important}}';" +
-                    "document.head.appendChild(s)})()",
+                    "(function(){" +
+                    "var t=document.getElementById('themeBtn');if(t)t.remove();" +
+                    "try{localStorage.removeItem('npTheme')}catch(e){}" +
+                    "document.body.classList.toggle('light',!" + darkJs + ");" +
+                    "var s=document.getElementById('android-header-alignment-fix');" +
+                    "if(!s){s=document.createElement('style');s.id='android-header-alignment-fix';" +
+                    "s.textContent='.header-actions{display:flex!important;align-items:center!important;justify-content:flex-end!important;gap:0!important}.header-actions .refresh-icon-btn{margin:0!important;flex:0 0 40px!important;width:40px!important;min-width:40px!important;height:40px!important;min-height:40px!important;padding:0!important;box-sizing:border-box!important;align-self:center!important;display:inline-flex!important;align-items:center!important;justify-content:center!important;line-height:1!important}@media(max-width:520px){.header-actions .refresh-icon-btn{flex-basis:40px!important;width:40px!important;min-width:40px!important;height:40px!important;min-height:40px!important}}';document.head.appendChild(s)}" +
+                    "})()",
                     null
                 );
             }
