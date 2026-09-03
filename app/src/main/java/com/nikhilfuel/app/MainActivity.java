@@ -7,6 +7,7 @@ import android.content.res.Configuration;
 import android.net.Uri;
 import android.os.Bundle;
 import android.webkit.JavascriptInterface;
+import android.webkit.ValueCallback;
 import android.webkit.WebResourceRequest;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
@@ -138,6 +139,34 @@ public class MainActivity extends Activity {
     }
 
     @Override public void onBackPressed() {
-        if (webView.canGoBack()) webView.goBack(); else super.onBackPressed();
+        // First give the HTML app a chance to close an open popup/modal.
+        // If a popup is open, consume Back completely so the page underneath
+        // is not navigated backward or otherwise changed.
+        if (webView != null) {
+            webView.evaluateJavascript(
+                "(function(){" +
+                "var p=document.getElementById('historyPopup');" +
+                "if(p&&getComputedStyle(p).display!=='none'){" +
+                "if(typeof closeHistoryPopup==='function')closeHistoryPopup();else p.style.display='none';return 'modal';}" +
+                "var m=document.getElementById('segmentHistoryOverlay');" +
+                "if(m&&m.classList.contains('show')){if(typeof closeSegmentHistory==='function')closeSegmentHistory();else m.classList.remove('show');return 'modal';}" +
+                "m=document.getElementById('denomHistoryOverlay');" +
+                "if(m&&m.classList.contains('show')){if(typeof closeDenomHistory==='function')closeDenomHistory();else m.classList.remove('show');return 'modal';}" +
+                "m=document.getElementById('termsOverlay');" +
+                "if(m&&m.classList.contains('show')){if(typeof closeTerms==='function')closeTerms();else m.classList.remove('show');return 'modal';}" +
+                "m=document.getElementById('appInfo');" +
+                "if(m&&m.classList.contains('show')){if(typeof closeAppInfo==='function')closeAppInfo();else m.classList.remove('show');return 'modal';}" +
+                "return 'none';})()",
+                new ValueCallback<String>() {
+                    @Override public void onReceiveValue(String value) {
+                        if (!"\"modal\"".equals(value)) {
+                            if (webView.canGoBack()) webView.goBack(); else MainActivity.super.onBackPressed();
+                        }
+                    }
+                }
+            );
+        } else {
+            super.onBackPressed();
+        }
     }
 }
