@@ -30,6 +30,20 @@ public class MainActivity extends Activity {
 
         webView.setWebViewClient(new WebViewClient() {
             @Override
+            public void onPageFinished(WebView view, String url) {
+                super.onPageFinished(view, url);
+                // Keep the top-right theme and refresh controls equal in height
+                // and vertically centered on the same baseline.
+                view.evaluateJavascript(
+                    "(function(){var s=document.getElementById('android-header-alignment-fix');" +
+                    "if(s)return;s=document.createElement('style');s.id='android-header-alignment-fix';" +
+                    "s.textContent='.header-actions{display:flex!important;align-items:center!important;justify-content:flex-end!important;gap:8px!important}.header-actions .theme-btn{margin:0!important;flex:0 0 50px!important;width:50px!important;height:40px!important;min-height:40px!important;padding:0!important;box-sizing:border-box!important;align-self:center!important}.header-actions .refresh-icon-btn{margin:0!important;flex:0 0 40px!important;width:40px!important;min-width:40px!important;height:40px!important;min-height:40px!important;padding:0!important;box-sizing:border-box!important;align-self:center!important;display:inline-flex!important;align-items:center!important;justify-content:center!important;line-height:1!important}@media(max-width:520px){.header-actions{gap:7px!important}.header-actions .theme-btn{flex-basis:48px!important;width:48px!important;height:40px!important;min-height:40px!important}.header-actions .refresh-icon-btn{flex-basis:40px!important;width:40px!important;min-width:40px!important;height:40px!important;min-height:40px!important}}';" +
+                    "document.head.appendChild(s)})()",
+                    null
+                );
+            }
+
+            @Override
             public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request) {
                 return handleExternalUrl(request.getUrl());
             }
